@@ -1,0 +1,194 @@
+---
+title: "Introducción a R. Ejercicio U02_E01"
+subtitle: . Entendiendo la  factura de la luz
+output:
+  pdf_document: default
+  html_notebook: default
+  html_document: default
+---
+
+
+#1.
+
+Las lecturas mensuales en Kwh (kilowatios-hora) del contador eléctrico de un cliente durante el año 2016 son las siguientes. La primera lectura corresponde al 31 de diciembre de 2015. El resto se realizan de día 31 de cada mes de 2016. Date cuenta que hay 13 lecturas. 
+
+
+```{r}
+lecturas=c(3007,3292,3568, 3783, 3979, 4169, 4351, 4565, 4749, 5001, 5219, 5438, 5685)
+```
+
+Calcula el total de energía consumida en el periodo
+
+```{r}
+# consumo total
+consumo_total= lecturas[13] - lecturas[1]
+consumo_total
+# mejor soloción - no necesito saber la longitud del vector
+lecturas[length(lecturas)]-lecturas[1]
+# o
+diff(range(lecturas))
+```
+
+Calcula el consumo mensual.
+
+```{r}
+consumo_mes = lecturas[2:13] - lecturas[1:12]
+consumo_mes
+# mejor
+lecturas[-1] - lecturas[-length(lecturas)]
+# o 
+diff(lecturas)
+
+```
+
+Calcula el consumo por semestres y trimestres. ¿Cuál es el semestre y el trimestre con mayor consumo?
+
+```{r}
+#semestres
+sum(consumo_mes[1:6])
+sum(consumo_mes[7:12])
+#trimestres
+sum(consumo_mes[1:3])
+sum(consumo_mes[4:6])
+sum(consumo_mes[7:9])
+sum(consumo_mes[10:12])
+
+```
+
+
+#2.
+
+Este cliente, tiene un contrato en el mercado libre en el cual su comercializadora de electricidad, le factura a precio fijo anual 0.1236 Euros el Kwh. 
+Calcula el importe total y mensual de termino de energía de la factura
+
+```{r}
+# Coste total
+precio_anual=0.1236
+coste_total = precio_anual * consumo_total
+coste_total
+# Coste mensual
+coste_mes <- consumo_mes* precio_anual
+coste_mes
+```
+
+
+#3.
+
+Existe otra modalidad de contrato, denominado precio voluntario del pequeño consumidor (PVPC). Está es la tarifa eléctrica regulada por el gobierno, y tiene un precio para cada hora del año basada en el coste real (en el mercado mayorista) de la generación de la energía. 
+Para los clientes que no tienen contador horario, existe un precio mensual. Los precios mensuales del PVPC en el año 2016 fueron
+
+```{r}
+pvpc_mes <- c(0.1034,0.0923,0.0917,0.0867,0.0878,0.1005,0.1026,0.1040,0.1061,0.1185,0.1226,0.1302)
+```
+
+Calcula el coste anual y mensual de nuestro cliente con esta tarifa. ¿Es más conveniente que el precio fijo?
+
+```{r}
+coste_pvpc_mes = pvpc_mes * consumo_mes
+coste_pvpc_mes
+coste_pvpc_total = sum(coste_pvpc_mes)
+coste_pvpc_total
+# Recordemos el coste total de la tarifa fija
+coste_total
+```
+
+Calcula el coste medio por trimestres. Usa la función mean
+
+```{r}
+# Directamente
+mean(coste_pvpc_mes[1:3]) 
+mean(coste_pvpc_mes[4:6]) 
+mean(coste_pvpc_mes[7:9]) 
+mean(coste_pvpc_mes[10:12]) 
+
+# Usando bucles
+
+for (i in seq(1,10,3))
+  print(mean(coste_pvpc_mes[i:(i+2)]))
+
+# Ussando apply
+sapply(seq(1,10,3),function(i){mean(coste_pvpc_mes[i:(i+2)])})
+```
+
+
+
+¿Cuanto ahorramos con la tarifa PVPC?
+
+```{r}
+coste_total -coste_pvpc_total
+```
+
+¿Cual debería ser el precio de la tarifa fija para que el coste, con nuestro perfil de consumo, fuera exactamente igual al de la PVPC
+
+```{r}
+precio_anual2 = coste_pvpc_total / consumo_total
+precio_anual2
+```
+
+#4.
+
+
+Para calcular por completo el coste de la luz nos faltan aun tres conceptos  que son: 
+
+- Término de potencia
+- Impuesto de electricidad 
+- Iva
+
+
+El término de potencia, depende de la potencia contratada en el hogar.
+El coste para el 2016 es de 38.04343 euros por año y Kw de potencia contratada. 
+Nuestro cliente tiene 4.6 Kw contratados. Calcula el coste mensual y anual del termino de potencia para nuestro cliente. 
+
+```{r}
+cst_potkw_anual <-  38.04343
+pot_cliente <- 4.6
+dias_mes <- c(31,29,31,30,31,30,31,31,30,31,30,31)
+#dias_mes = as.numeric(table(format(seq(as.Date("2016-01-01"),as.Date("2016-12-31"),by="day"),"%m")))
+
+coste_potencia_anual <- cst_potkw_anual * pot_cliente
+coste_potencia_anual 
+
+coste_potencia_mensual <- cst_potkw_anual * pot_cliente * dias_mes /sum(dias_mes)
+coste_potencia_mensual
+```
+
+- El impuesto de electricidad es un 5.1127 % del la suma de los términos de energía y potencia.
+- Por alquiler de equipos de medida se pagan 0.026551 euros por día
+- El IVA es un 21% de la suma de todos los costes anteriores: termino de energía, termino de potencia, impuesto de electricidad y alquilar equipos.
+
+Calcular el importe final de las facturas de nuestro cliente en las dos modalidades de contrato. ¿Cual es ahorro anual en el coste total de la factura en la modalidad más barata?
+
+```{r}
+tasa_impuesto = 5.1127/100
+impuesto_tarifafija <- (coste_mes + coste_potencia_mensual)*tasa_impuesto
+impuesto_tarifafija
+impuesto_pvp <-  (coste_pvpc_mes + coste_potencia_mensual)*tasa_impuesto
+impuesto_pvp
+
+precio_alquiler <-  0.026551
+alquiler=dias_mes*precio_alquiler
+alquiler
+
+facturas_tarifafija_siniva <- coste_mes + coste_potencia_mensual + impuesto_tarifafija + alquiler
+facturas_pvpc_siniva <- coste_pvpc_mes + coste_potencia_mensual + impuesto_pvp + alquiler
+
+facturas_tarifafija_iva <- 1.21*facturas_tarifafija_siniva
+facturas_tarifafija_iva
+
+facturas_pvpc_iva <- 1.21*facturas_pvpc_siniva
+facturas_pvpc_iva
+
+total_anual_tarifafija = sum(facturas_tarifafija_iva)
+total_anual_pvp  =  sum(facturas_pvpc_iva)
+
+# diferencia
+total_anual_tarifafija - total_anual_pvp
+
+```
+
+
+
+
+
+
+
