@@ -71,9 +71,79 @@ if (importe_total_anual > importe_total_anual_pvpc){
 }
 
 # 2) Calcula el coste medio por trimestres (Usa la funcion mean) 
+coste_primer_trimestre_pvpc = importe_en_cada_mes_pvpc[1:3]
+coste_segundo_trimestre_pvpc = importe_en_cada_mes_pvpc[4:6]
+coste_tercer_trimestre_pvpc = importe_en_cada_mes_pvpc[7:9]
+coste_cuarto_trimestre_pvpc = importe_en_cada_mes_pvpc[10:12]
+
+coste_medio_primer_trimestre_pvpc = mean(coste_primer_trimestre_pvpc)
+coste_medio_segundo_trimestre_pvpc = mean(coste_segundo_trimestre_pvpc)
+coste_medio_tercer_trimestre_pvpc = mean(coste_tercer_trimestre_pvpc)
+coste_medio_cuarto_trimestre_pvpc = mean(coste_cuarto_trimestre_pvpc)
+
+costes_medios_por_trimestre_pvpc = c(coste_medio_primer_trimestre_pvpc, coste_medio_segundo_trimestre_pvpc, coste_medio_tercer_trimestre_pvpc, coste_medio_cuarto_trimestre_pvpc)
+
 # 3) Cuanto ahorramos con la tarifa PVPC? 
+ahorro_con_pvcp = importe_total_anual - importe_total_anual_pvpc
+
 # 4) Cual deberia ser el precio de la tarifa fija para que el coste, con nuestro 
 #    perfil de consumo, fuera exactamente igual al de la PVPC
+consumo_anual = sum(consumo_en_cada_mes)
+precio_hipotetico_de_la_tarifa_fija = importe_total_anual_pvpc / consumo_anual
+
+# Ejercicio 4
+#
+# Para calcular por completo el coste de la luz nos faltan aun tres conceptos que son:
+#  - Termino de potencia
+#  - Impuesto de electricidad
+#  - Iva
+#
+#  - El termino de potencia, depende de la potencia contratada en el hogar.
+#  - El coste para el 2016 es de 38.04343 euros por anyo y Kw de potencia contratada.
+#  - Nuestro cliente tiene 4.6 Kw contratados.
+#
+#  Calcula el coste mensual y anual del termino de potencia para nuestro cliente.
+kw_contratados = 4.6
+coste_potencia_por_anyo_y_kw = 38.04343
+coste_anual_termino_de_potencia = kw_contratados * coste_potencia_por_anyo_y_kw
+
+dias_mes <- c(31,29,31,30,31,30,31,31,30,31,30,31)
+numero_total_dias = sum(dias_mes)
+coste_diario_termino_potencia = coste_anual_termino_de_potencia / numero_total_dias
+coste_mensual_termino_potencia = dias_mes * coste_diario_termino_potencia
 
 
+#
+#  - El impuesto de electricidad es un 5.1127 % del la suma de los terminos de 
+#    energia y potencia.
+impuesto_electricidad = 5.1127 / 100
+
+suma_terminos_energia_y_potencia = importe_total_anual + coste_anual_termino_de_potencia
+impuesto_electricidad_cliente = suma_terminos_energia_y_potencia * impuesto_electricidad
+
+#  - Por alquiler de equipos de medida se pagan 0.026551 Euros por dia
+coste_alquiler_equipos_por_dia = 0.026551
+coste_total_aquiler_equipos = numero_total_dias * coste_alquiler_equipos_por_dia
+
+#  - El IVA es un 21% de la suma de todos los costes anteriores: termino de energia,
+#    termino de potencia, impuesto de electricidad y alquiler equipos.
+IVA = 21 / 100
+
+suma_todos_los_costes = suma_terminos_energia_y_potencia + impuesto_electricidad_cliente + coste_total_aquiler_equipos
+coste_IVA_cliente = suma_todos_los_costes * IVA
+
+#  Calcular el importe final de las facturas de nuestro cliente en las dos modalidades 
+#  de contrato. 
+
+# energia + potencia + impuesto electricidad + alquiler equipos + IVA 
+suma_terminos_energia_y_potencia_pvpc = importe_total_anual_pvpc + coste_anual_termino_de_potencia
+suma_todos_los_costes_pvpc = suma_terminos_energia_y_potencia_pvpc + impuesto_electricidad_cliente + coste_total_aquiler_equipos
+coste_IVA_cliente_pvpc = suma_todos_los_costes_pvpc * IVA
+
+total_factura = suma_todos_los_costes + coste_IVA_cliente
+
+total_factura_pvpc = suma_todos_los_costes_pvpc + coste_IVA_cliente_pvpc
+
+# Cual es el ahorro anual en el coste total de la factura en la modalidad mas barata?
+ahorro = total_factura - total_factura_pvpc
 
